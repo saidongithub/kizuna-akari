@@ -38,40 +38,68 @@ client.once('ready', () => {
 
 		//ping users every 3 hours after first claim reset
 		setInterval(function(){
+			if(new Date().getHours >= 8 && new Date().getHours <= 23){
 			pingchannel.send(pinglist);
+			}
 		}, 1000 * 60 * 60 * 3);
 
 	}, untilreset);
 });
 
+function updateConfig(){
+	filesystem.writeFile('config.json', JSON.stringify({
+		"token": token,
+		"prefix": prefix,
+		"channels": channels,
+		"pinglist": pinglist
+	}, null, "\t")).then(() => {
+		console.log("success");
+	}).catch(() => {
+		console.log("oh no");
+	});
+}
+
 client.on('message', function(message){
-
     try{
-
 		//if message starts with prefix and isn't bot
 		if (!message.content.startsWith(prefix) || message.author.bot) return;
 		//set command to first word and args to array of all other words
 		const args = message.content.slice(prefix.length).trim().split(/ +/);
 		const command = args.shift().toLowerCase();
 
-		if(command === 'ping'){
-			if(args[0] === 'users'){
-				message.channel.send(pinglist);
+		function send(msg){
+			message.channel.send(msg);
+		}
+
+		if(command == 'ping'){
+			if(args[0] == 'users'){
+				if(pinglist.length){
+					send(pinglist);
+				} else{
+					send("The list is empty");
+				}
 			} else
-			if(args[0] === 'add' && !pinglist.includes(message.member.toString())){
-				//add user id to pinglist
-				pinglist.push(message.member.toString());
-				filesystem.writeFile('config.json', JSON.stringify({
-					"token": token,
-					"prefix": prefix,
-					"channels": channels,
-					"pinglist": pinglist
-				}, null, "\t")).then(() => {
-					console.log("success");
-				}).catch(() => {
-					console.log("oh no");
-				});
+
+			if(args[0] == 'add'){
+				if(pinglist.includes(message.member.toString())){
+					send("You are already on the list");
+				} else{
+					//add user id to pinglist
+					pinglist.push(message.member.toString());
+					updateConfig();
+					send("You have been added to the list");
+				}
+			} else
+			if(args[0] == 'remove'){
+				if(pinglist.includes(message.member.toString())){
+					pinglist.splice(pinglist.indexOf(message.member.toString()), 1);
+					updateConfig();
+					send("You have been removed from the list");
+				} else{
+					send("You aren't on the list");
+				}
 			}
+
 		}
 
     }catch(e){
