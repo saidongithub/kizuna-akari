@@ -32,12 +32,12 @@ client.once('ready', () => {
 
 	var pingchannel = client.channels.get(channels[0]);
 
-	setTimeout(function(){
+	setTimeout(() => {
 		//ping users on claim reset
 		pingchannel.send(pinglist);
 
 		//ping users every 3 hours after first claim reset
-		setInterval(function(){
+		setInterval(() => {
 			if(new Date().getHours >= 8 && new Date().getHours <= 23){
 			pingchannel.send(pinglist);
 			}
@@ -63,6 +63,8 @@ client.on('message', function(message){
     try{
 		//if message starts with prefix and isn't bot
 		if (!message.content.startsWith(prefix) || message.author.bot) return;
+		//get user's @
+		const id = "<@" + message.member.id.toString() + ">";
 		//set command to first word and args to array of all other words
 		const args = message.content.slice(prefix.length).trim().split(/ +/);
 		const command = args.shift().toLowerCase();
@@ -72,6 +74,9 @@ client.on('message', function(message){
 		}
 
 		if(command == 'ping'){
+			if(!args.length){
+				send(id);
+			} else
 			if(args[0] == 'users'){
 				if(pinglist.length){
 					send(pinglist);
@@ -79,27 +84,26 @@ client.on('message', function(message){
 					send("The list is empty");
 				}
 			} else
-
 			if(args[0] == 'add'){
-				if(pinglist.includes(message.member.toString())){
-					send("You are already on the list");
-				} else{
+				if(!pinglist.includes(id)){
 					//add user id to pinglist
-					pinglist.push(message.member.toString());
+					pinglist.push(id);
 					updateConfig();
 					send("You have been added to the list");
+				} else{
+					send("You are already on the list");
 				}
 			} else
 			if(args[0] == 'remove'){
-				if(pinglist.includes(message.member.toString())){
-					pinglist.splice(pinglist.indexOf(message.member.toString()), 1);
+				if(pinglist.includes(id)){
+					//remove user id from pinglist
+					pinglist.splice(pinglist.indexOf(id), 1);
 					updateConfig();
 					send("You have been removed from the list");
 				} else{
 					send("You aren't on the list");
 				}
 			}
-
 		}
 
     }catch(e){
