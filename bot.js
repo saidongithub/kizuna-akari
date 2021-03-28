@@ -58,7 +58,7 @@ function updateConfig(){
 		console.log("oh no");
 	});
 }
-
+//on a message
 client.on('message', function(message){
     try{
 		//if message starts with prefix and isn't bot
